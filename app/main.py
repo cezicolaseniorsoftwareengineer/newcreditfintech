@@ -71,6 +71,29 @@ app.add_middleware(
 
 # Middleware for distributed tracing and logging
 @app.middleware("http")
+async def add_security_headers(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+    """
+    Security Middleware to add HTTP security headers to every response.
+    Protects against XSS, Clickjacking, and MIME-sniffing.
+    """
+    response = await call_next(request)
+
+    # HSTS (HTTP Strict Transport Security) - Force HTTPS for 1 year
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+
+    # Prevent Clickjacking (X-Frame-Options)
+    response.headers["X-Frame-Options"] = "DENY"
+
+    # XSS Protection
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+
+    # Referrer Policy
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+
+    return response
+
+@app.middleware("http")
 async def add_correlation_id(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
     """
     Middleware for distributed tracing.

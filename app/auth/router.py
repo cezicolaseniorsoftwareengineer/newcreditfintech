@@ -114,12 +114,14 @@ async def google_callback(request: Request, response: Response, db: Session = De
             expires_delta=access_token_expires
         )
 
-        # Set cookie
+        # Set cookie with strict security settings
         response = RedirectResponse(url="/")
         response.set_cookie(
             key="access_token",
             value=f"Bearer {access_token}",
-            httponly=True,
+            httponly=True,  # Prevent JavaScript access (XSS protection)
+            secure=True,    # Only send over HTTPS
+            samesite="lax", # CSRF protection
             max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
             expires=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         )
@@ -157,11 +159,13 @@ def register(response: Response, user: UserCreate, db: Session = Depends(get_db)
         expires_delta=access_token_expires
     )
 
-    # Set cookie
+    # Set cookie with strict security settings
     response.set_cookie(
         key="access_token",
         value=f"Bearer {access_token}",
-        httponly=True,
+        httponly=True,  # Prevent JavaScript access (XSS protection)
+        secure=True,    # Only send over HTTPS
+        samesite="lax", # CSRF protection
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         expires=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
@@ -181,11 +185,13 @@ def login(response: Response, user_in: UserLogin, db: Session = Depends(get_db))
         expires_delta=access_token_expires
     )
 
-    # Set cookie
+    # Set cookie with strict security settings
     response.set_cookie(
         key="access_token",
         value=f"Bearer {access_token}",
-        httponly=True,
+        httponly=True,  # Prevent JavaScript access (XSS protection)
+        secure=True,    # Only send over HTTPS
+        samesite="lax", # CSRF protection
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         expires=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
