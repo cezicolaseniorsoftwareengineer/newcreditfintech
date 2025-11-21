@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-md mx-auto bg-white rounded-xl shadow-lg overflow-hidden animate-fade-in mt-10">
+    <!-- Header -->
+    <div class="bg-purple-700 p-8 text-center">
+        <div class="w-48 h-48 mx-auto mb-6">
+            <img src="/static/img/logo.png" alt="Logo" class="w-full h-full rounded-full object-cover shadow-2xl">
+        </div>
+        <h1 class="text-white text-2xl font-bold mb-1">Pagamento Pix</h1>
+        <p class="text-purple-200 text-base">Simulação de App Bancário</p>
+    </div>
+
+    <!-- Payment Details -->
+    <div class="p-8">
+        <div class="text-center mb-8">
+            <p class="text-gray-500 text-sm uppercase tracking-wide font-semibold mb-1">Valor a pagar</p>
+            <h2 class="text-4xl font-bold text-gray-900" id="displayValor">R$ 0,00</h2>
+            <p class="text-gray-500 mt-2" id="displayDesc"></p>
+        </div>
+
+        <div class="space-y-4 border-t border-gray-100 pt-6">
+            <div class="flex justify-between text-sm">
+                <span class="text-gray-500">Para</span>
+                <span class="font-medium text-gray-900">NewCredit User</span>
+            </div>
+            <div class="flex justify-between text-sm">
+                <span class="text-gray-500">Instituição</span>
+                <span class="font-medium text-gray-900">NewCredit Fintech</span>
+            </div>
+            <div class="flex justify-between text-sm">
+                <span class="text-gray-500">Data</span>
+                <span class="font-medium text-gray-900" id="currentDate"></span>
+            </div>
+        </div>
+
+        <!-- Action Button -->
+        <button onclick="confirmPayment()" id="btnConfirm"
+            class="w-full mt-8 bg-purple-600 text-white font-bold py-4 rounded-xl hover:bg-purple-700 transition-all transform active:scale-95 shadow-lg flex justify-center items-center gap-2">
+            <span>Confirmar Pagamento</span>
+            <i data-lucide="check-circle" class="w-5 h-5"></i>
+        </button>
+
+        <!-- Success State (Hidden) -->
+        <div id="successState" class="hidden text-center py-4">
+            <div
+                class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                <i data-lucide="check" class="w-10 h-10 text-green-600"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-green-600 mb-2">Pagamento Realizado!</h3>
+            <p class="text-gray-500 text-sm">Seu pagamento foi processado com sucesso.</p>
+            <button onclick="window.close()" class="mt-6 text-purple-600 font-medium hover:underline">Fechar
+                Janela</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Parse URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    const valor = parseFloat(urlParams.get('valor') || 0);
+    const desc = urlParams.get('desc') || 'Transferência Pix';
+
+    // Format currency
+    const formatter = new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+    });
+
+    // Set values
+    document.getElementById('displayValor').textContent = formatter.format(valor);
+    document.getElementById('displayDesc').textContent = desc;
+    document.getElementById('currentDate').textContent = new Date().toLocaleDateString('pt-BR');
+
+    async function confirmPayment() {
+        const btn = document.getElementById('btnConfirm');
+        const success = document.getElementById('successState');
+
+        // Simulate processing
+        btn.innerHTML = '<div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div> Processando...';
+        btn.disabled = true;
+
+        try {
+            const response = await fetch('/pix/receber/confirmar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    valor: valor,
+                    descricao: desc
+                })
+            });
+
+            if (response.ok) {
+                setTimeout(() => {
+                    btn.classList.add('hidden');
+                    success.classList.remove('hidden');
+
+                    // Trigger confetti if available or just simple animation
+                    if (window.lucide) {
+                        lucide.createIcons();
+                    }
+                }, 1000);
+            } else {
+                alert('Erro ao processar pagamento. Tente novamente.');
+                btn.innerHTML = 'Tentar Novamente';
+                btn.disabled = false;
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Erro de conexão.');
+            btn.innerHTML = 'Tentar Novamente';
+            btn.disabled = false;
+        }
+    }
+</script>
+{% endblock %}

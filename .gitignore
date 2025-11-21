@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+
+# IDE
+.vscode/
+.idea/
+
+# Agent & Persona Specific (Strictly Excluded)
+.copilot/
+.github/copilot-instructions.md
+
+desafiofintechpy.py
+ObjetivoProjeto.txt
+*.json
+!package.json
+!tasks.json
+!launch.json
+
+# Logs
+*.log

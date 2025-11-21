@@ -1,0 +1,345 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="mb-4">
+        <h1 class="text-2xl font-bold text-gray-900">Área Pix</h1>
+        <p class="text-gray-500">Envie e receba pagamentos a qualquer hora.</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex p-1 bg-gray-100 rounded-xl mb-6">
+        <button onclick="switchTab('pagar')" id="tab-pagar"
+            class="flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all bg-white text-purple-700 shadow-sm">
+            Transferir
+        </button>
+        <button onclick="switchTab('cobrar')" id="tab-cobrar"
+            class="flex-1 py-2 px-4 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-700 transition-all">
+            Receber (Depositar)
+        </button>
+    </div>
+
+    <!-- Send Pix Form (Pagar) -->
+    <div id="view-pagar" class="bg-white rounded-xl p-6 shadow-sm mb-6 animate-fade-in">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">Transferir</h2>
+
+        <form id="pixForm" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Valor a transferir</label>
+                <div class="relative">
+                    <span class="absolute left-3 top-3 text-gray-500">R$</span>
+                    <input type="number" id="valor" step="0.01"
+                        class="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-lg font-semibold"
+                        placeholder="0,00">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Chave Pix</label>
+                <input type="text" id="chave"
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                    placeholder="CPF, Email ou Telefone">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Chave</label>
+                <select id="tipo"
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none bg-white">
+                    <option value="EMAIL">E-mail</option>
+                    <option value="CPF">CPF</option>
+                    <option value="TELEFONE">Telefone</option>
+                    <option value="ALEATORIA">Chave Aleatória</option>
+                </select>
+            </div>
+
+            <!-- Agendamento Toggle -->
+            <div class="flex items-center gap-2 pt-2">
+                <input type="checkbox" id="toggleAgendamento"
+                    class="w-4 h-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500 cursor-pointer">
+                <label for="toggleAgendamento"
+                    class="text-sm font-medium text-gray-700 cursor-pointer select-none">Agendar
+                    transferência</label>
+            </div>
+
+            <!-- Agendamento Input (Hidden by default) -->
+            <div id="agendamentoContainer" class="hidden transition-all duration-300 ease-in-out">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Data do Agendamento</label>
+                <input type="date" id="data_agendamento"
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-600">
+            </div>
+
+            <button type="submit"
+                class="w-full nu-purple text-white font-bold py-4 rounded-full hover:bg-purple-800 transition-colors shadow-md flex justify-center items-center gap-2">
+                <span>Enviar Pix</span>
+                <i data-lucide="arrow-right" class="w-5 h-5"></i>
+            </button>
+        </form>
+    </div>
+
+    <!-- Receive Pix Form (Cobrar) -->
+    <div id="view-cobrar" class="hidden bg-white rounded-xl p-6 shadow-sm mb-6 animate-fade-in">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">Receber Pix</h2>
+        <p class="text-sm text-gray-500 mb-4">Gere um QR Code para receber transferências na sua conta.</p>
+
+        <form id="cobrarForm" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Valor a receber</label>
+                <div class="relative">
+                    <span class="absolute left-3 top-3 text-gray-500">R$</span>
+                    <input type="number" id="valorReceber" step="0.01"
+                        class="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-lg font-semibold"
+                        placeholder="0,00">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Descrição (Opcional)</label>
+                <input type="text" id="descricaoReceber"
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                    placeholder="Ex: Rachar pizza">
+            </div>
+
+            <button type="submit"
+                class="w-full bg-gray-900 text-white font-bold py-4 rounded-full hover:bg-gray-800 transition-colors shadow-md flex justify-center items-center gap-2">
+                <span>Gerar QR Code</span>
+                <i data-lucide="qr-code" class="w-5 h-5"></i>
+            </button>
+        </form>
+
+        <!-- QR Code Result -->
+        <div id="qrResult" class="hidden mt-6 text-center border-t border-gray-100 pt-6">
+            <div class="bg-white p-4 rounded-xl border-2 border-purple-100 inline-block mb-4">
+                <img id="qrImage" src="" alt="QR Code Pix" class="w-48 h-48">
+            </div>
+            <p class="text-sm text-gray-500 mb-2">Pix Copia e Cola</p>
+            <div class="flex gap-2">
+                <input type="text" id="copyPasteCode" readonly
+                    class="w-full p-2 bg-gray-50 border border-gray-200 rounded text-xs text-gray-600 font-mono">
+                <button onclick="copyCode()" class="p-2 bg-purple-100 text-purple-700 rounded hover:bg-purple-200">
+                    <i data-lucide="copy" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <button id="btnConfirmarRecebimento" onclick="confirmarRecebimento()"
+                class="mt-4 w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition-colors shadow-sm flex justify-center items-center gap-2">
+                <span>Feito (Simular Pagamento)</span>
+                <i data-lucide="check-circle" class="w-5 h-5"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Result Modal (Hidden by default) -->
+    <div id="result" class="hidden bg-green-50 border border-green-200 rounded-xl p-4 animate-fade-in">
+        <div class="flex items-center gap-3 mb-2">
+            <div id="resultIconContainer" class="bg-green-100 p-2 rounded-full">
+                <i data-lucide="check" class="w-5 h-5 text-green-600"></i>
+            </div>
+            <h3 class="font-bold text-green-800">Pix Enviado!</h3>
+        </div>
+        <p class="text-sm text-green-700" id="resultText"></p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function switchTab(tab) {
+        const viewPagar = document.getElementById('view-pagar');
+        const viewCobrar = document.getElementById('view-cobrar');
+        const tabPagar = document.getElementById('tab-pagar');
+        const tabCobrar = document.getElementById('tab-cobrar');
+
+        if (tab === 'pagar') {
+            viewPagar.classList.remove('hidden');
+            viewCobrar.classList.add('hidden');
+
+            tabPagar.className = "flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all bg-white text-purple-700 shadow-sm";
+            tabCobrar.className = "flex-1 py-2 px-4 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-700 transition-all";
+        } else {
+            viewPagar.classList.add('hidden');
+            viewCobrar.classList.remove('hidden');
+
+            tabCobrar.className = "flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all bg-white text-purple-700 shadow-sm";
+            tabPagar.className = "flex-1 py-2 px-4 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-700 transition-all";
+        }
+    }
+
+    function copyCode() {
+        const copyText = document.getElementById("copyPasteCode");
+        copyText.select();
+        document.execCommand("copy");
+        alert("Código copiado!");
+    }
+
+    async function confirmarRecebimento() {
+        const btn = document.getElementById('btnConfirmarRecebimento');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>';
+        btn.disabled = true;
+
+        const data = {
+            valor: parseFloat(document.getElementById('valorReceber').value),
+            descricao: document.getElementById('descricaoReceber').value
+        };
+
+        try {
+            const response = await fetch('/pix/receber/confirmar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                alert('Pagamento confirmado! Seu saldo foi atualizado.');
+                window.location.href = '/'; // Go to home/dashboard
+            } else {
+                alert('Erro ao confirmar pagamento.');
+            }
+        } catch (error) {
+            alert('Erro de conexão.');
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    }
+
+    // Toggle Agendamento
+    document.getElementById('toggleAgendamento').addEventListener('change', (e) => {
+        const container = document.getElementById('agendamentoContainer');
+        const input = document.getElementById('data_agendamento');
+        if (e.target.checked) {
+            container.classList.remove('hidden');
+        } else {
+            container.classList.add('hidden');
+            input.value = ''; // Clear value
+        }
+    });
+
+    // Handle Send Pix
+    document.getElementById('pixForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = e.target.querySelector('button');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>';
+        btn.disabled = true;
+
+        const dataAgendamento = document.getElementById('data_agendamento').value;
+
+        const data = {
+            valor: parseFloat(document.getElementById('valor').value),
+            chave_pix: document.getElementById('chave').value,
+            tipo_chave: document.getElementById('tipo').value,
+            descricao: "Transferência via Web UI",
+            data_agendamento: dataAgendamento || null
+        };
+
+        try {
+            const response = await fetch('/pix/transacoes', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Idempotency-Key': 'web-' + Date.now()
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            const resultDiv = document.getElementById('result');
+            const resultText = document.getElementById('resultText');
+            const resultIconContainer = document.getElementById('resultIconContainer');
+            const resultTitle = resultDiv.querySelector('h3');
+
+            resultDiv.classList.remove('hidden');
+
+            if (response.ok) {
+                if (result.status === 'AGENDADO') {
+                    resultDiv.className = "bg-blue-50 border border-blue-200 rounded-xl p-4 mt-4";
+                    resultIconContainer.className = "bg-blue-100 p-2 rounded-full";
+                    resultIconContainer.innerHTML = '<i data-lucide="calendar" class="w-5 h-5 text-blue-600"></i>';
+                    resultTitle.className = "font-bold text-blue-800";
+                    resultTitle.innerText = "Pix Agendado!";
+                    resultText.className = "text-sm text-blue-700";
+                    resultText.innerHTML = `Agendado para: <strong>${dataAgendamento}</strong><br>ID: ${result.id}`;
+                } else {
+                    resultDiv.className = "bg-green-50 border border-green-200 rounded-xl p-4 mt-4";
+                    resultIconContainer.className = "bg-green-100 p-2 rounded-full";
+                    resultIconContainer.innerHTML = '<i data-lucide="check" class="w-5 h-5 text-green-600"></i>';
+                    resultTitle.className = "font-bold text-green-800";
+                    resultTitle.innerText = "Pix Enviado!";
+                    resultText.className = "text-sm text-green-700";
+                    resultText.innerHTML = `ID: ${result.id}<br>Status: <strong>${result.status}</strong>`;
+                }
+            } else {
+                resultDiv.className = "bg-red-50 border border-red-200 rounded-xl p-4 mt-4";
+                resultIconContainer.className = "bg-red-100 p-2 rounded-full";
+                resultIconContainer.innerHTML = '<i data-lucide="alert-circle" class="w-5 h-5 text-red-600"></i>';
+                resultTitle.className = "font-bold text-red-800";
+                resultTitle.innerText = "Erro no Envio";
+                resultText.className = "text-sm text-red-700";
+
+                if (result.detail === "Saldo insuficiente") {
+                    resultText.innerHTML = `<strong>Saldo Insuficiente!</strong><br>Você não tem saldo para esta transação.<br>Sugerimos agendar para uma data futura.`;
+
+                    // Auto-enable scheduling
+                    const toggle = document.getElementById('toggleAgendamento');
+                    const container = document.getElementById('agendamentoContainer');
+                    if (!toggle.checked) {
+                        toggle.checked = true;
+                        container.classList.remove('hidden');
+                        // Optional: Focus on date
+                        document.getElementById('data_agendamento').focus();
+                    }
+                } else {
+                    resultText.innerHTML = `Erro: ${result.detail || 'Falha ao enviar'}`;
+                }
+            }
+            lucide.createIcons();
+
+        } catch (error) {
+            console.error('Erro:', error);
+            // If it's a JSON parsing error, it might be a server 500 HTML page
+            alert('Erro na comunicação com o servidor. Verifique o console para mais detalhes.');
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    });
+
+    // Handle Receive Pix (Cobrar)
+    document.getElementById('cobrarForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = e.target.querySelector('button');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>';
+        btn.disabled = true;
+
+        const data = {
+            valor: parseFloat(document.getElementById('valorReceber').value),
+            descricao: document.getElementById('descricaoReceber').value
+        };
+
+        try {
+            const response = await fetch('/pix/cobrar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                document.getElementById('qrResult').classList.remove('hidden');
+                document.getElementById('qrImage').src = result.qr_code_url;
+                document.getElementById('copyPasteCode').value = result.copia_e_cola;
+            }
+
+        } catch (error) {
+            alert('Erro ao gerar cobrança');
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    });
+</script>
+{% endblock %}

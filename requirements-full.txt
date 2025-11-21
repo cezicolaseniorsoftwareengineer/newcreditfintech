@@ -1,0 +1,69 @@
+# ============================================
+# AMBIENTE PYTHON COMPLETO - FINTECH PROJECT
+# Python 3.13+ compatível
+# ============================================
+
+# -------- FastAPI (Projeto Principal) --------
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+pydantic>=2.10.0
+pydantic-settings>=2.6.0
+python-multipart>=0.0.20
+
+# -------- Flask (Alternativa Web Framework) --------
+flask>=3.1.0
+flask-cors>=5.0.0
+flask-sqlalchemy>=3.1.0
+flask-restful>=0.3.10
+flask-jwt-extended>=4.7.1
+
+# -------- Django (Full Stack Framework) --------
+django>=5.1.0
+djangorestframework>=3.15.0
+django-cors-headers>=4.6.0
+django-filter>=24.3
+
+# -------- Database & ORM --------
+sqlalchemy>=2.0.36
+alembic>=1.14.0
+psycopg2-binary>=2.9.10    # PostgreSQL
+pymongo>=4.10.0            # MongoDB
+redis>=5.2.0               # Cache
+
+# -------- Security --------
+cryptography>=44.0.0
+pyjwt>=2.10.0
+bcrypt>=4.2.1
+python-dotenv>=1.0.1
+
+# -------- Testing --------
+pytest>=8.3.0
+pytest-cov>=6.0.0
+pytest-asyncio>=0.24.0
+httpx>=0.28.0
+coverage>=7.6.0
+
+# -------- Data & Validation --------
+pydantic-extra-types>=2.10.0
+email-validator>=2.2.0
+python-dateutil>=2.9.0
+
+# -------- Utilities --------
+requests>=2.32.0
+aiohttp>=3.11.0
+celery>=5.4.0
+gunicorn>=23.0.0
+
+# -------- Development Tools --------
+black>=24.10.0
+flake8>=7.1.0
+mypy>=1.13.0
+isort>=5.13.0
+
+# -------- API Documentation --------
+flasgger>=0.9.7.1          # Swagger para Flask
+drf-spectacular>=0.28.0     # OpenAPI para Django REST
+
+# -------- Monitoring & Logging --------
+python-json-logger>=3.2.0
+sentry-sdk>=2.18.0

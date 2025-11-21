@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NewCredit Fintech</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .nu-purple {
+            background-color: #820AD1;
+        }
+
+        .nu-purple-dark {
+            background-color: #6D08AF;
+        }
+
+        .nu-text-purple {
+            color: #820AD1;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-2px);
+            transition: all 0.2s;
+        }
+
+        .privacy-hidden {
+            color: #000 !important;
+            letter-spacing: 2px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+    <!-- Mobile-first Header -->
+    <header class="nu-purple text-white p-4 shadow-lg">
+        <div class="w-full max-w-md md:max-w-6xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <img src="/static/img/logo.png" alt="Logo" class="w-16 h-16 rounded-full object-cover shadow-md">
+                <span class="font-semibold text-lg" id="user-greeting">Olá, {{ user_name.split(' ')[0] if user_name else
+                    'Cliente' }}</span>
+            </div>
+            <div class="flex gap-4">
+                <i data-lucide="eye" id="toggle-balance"
+                    class="w-6 h-6 cursor-pointer hover:text-gray-200 transition-colors"></i>
+                <i data-lucide="help-circle" class="w-6 h-6 cursor-pointer hover:text-gray-200"></i>
+                <i data-lucide="log-out" onclick="logout()" class="w-6 h-6 cursor-pointer hover:text-gray-200"></i>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow w-full max-w-md md:max-w-6xl mx-auto p-4 space-y-6">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Bottom Navigation (App Style) -->
+    <nav class="bg-white border-t border-gray-200 sticky bottom-0 pb-4 pt-2 px-6 z-50">
+        <div
+            class="w-full max-w-md md:max-w-6xl mx-auto flex justify-between items-center text-gray-500 text-xs font-medium">
+            <a href="/"
+                class="flex flex-col items-center gap-1 hover:text-purple-700 {{ 'text-purple-700' if page == 'home' else '' }}">
+                <i data-lucide="arrow-up-down" class="w-6 h-6"></i>
+                <span>Transações</span>
+            </a>
+            <a href="/ui/pix"
+                class="flex flex-col items-center gap-1 hover:text-purple-700 {{ 'text-purple-700' if page == 'pix' else '' }}">
+                <i data-lucide="zap" class="w-6 h-6"></i>
+                <span>Área Pix</span>
+            </a>
+            <a href="/ui/extrato"
+                class="flex flex-col items-center gap-1 hover:text-purple-700 {{ 'text-purple-700' if page == 'extrato' else '' }}">
+                <i data-lucide="list" class="w-6 h-6"></i>
+                <span>Extrato</span>
+            </a>
+            <a href="/ui/boleto"
+                class="flex flex-col items-center gap-1 hover:text-purple-700 {{ 'text-purple-700' if page == 'boleto' else '' }}">
+                <i data-lucide="barcode" class="w-6 h-6"></i>
+                <span>Pagar</span>
+            </a>
+        </div>
+    </nav>
+
+    <script>
+        lucide.createIcons();
+
+        // Balance Toggle Logic
+        const toggleBtn = document.getElementById('toggle-balance');
+        let isBalanceVisible = localStorage.getItem('balanceVisible') !== 'false'; // Default true
+
+        function updateBalanceVisibility() {
+            const sensitiveElements = document.querySelectorAll('.sensitive-data');
+
+            sensitiveElements.forEach(el => {
+                if (!el.dataset.original) {
+                    el.dataset.original = el.innerText;
+                }
+
+                if (isBalanceVisible) {
+                    el.innerText = el.dataset.original;
+                    el.classList.remove('privacy-hidden');
+                } else {
+                    el.innerText = '******';
+                    el.classList.add('privacy-hidden');
+                }
+            });
+
+            if (toggleBtn) {
+                if (isBalanceVisible) {
+                    toggleBtn.setAttribute('data-lucide', 'eye');
+                    toggleBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye w-6 h-6 cursor-pointer hover:text-gray-200 transition-colors"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
+                } else {
+                    toggleBtn.setAttribute('data-lucide', 'eye-off');
+                    toggleBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye-off w-6 h-6 cursor-pointer hover:text-gray-200 transition-colors"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>';
+                }
+            }
+        }
+
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', () => {
+                isBalanceVisible = !isBalanceVisible;
+                localStorage.setItem('balanceVisible', isBalanceVisible);
+                updateBalanceVisibility();
+            });
+        }
+
+        // Run on load
+        // Wait for DOM content to be loaded to ensure elements are present
+        document.addEventListener('DOMContentLoaded', updateBalanceVisibility);
+
+        async function logout() {
+            await fetch('/auth/logout', { method: 'POST' });
+            localStorage.removeItem('user_name');
+            window.location.href = '/login';
+        }
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

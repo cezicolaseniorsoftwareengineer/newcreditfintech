@@ -1,0 +1,22 @@
+version: "3.9"
+
+services:
+  api:
+    build: .
+    container_name: fintech-api
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_NAME=Fintech Tech Challenge
+      - DEBUG=False
+      - LOG_LEVEL=INFO
+      - DATABASE_URL=sqlite:///./data/fintech.db
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    networks:
+      - fintech-network
+
+networks:
+  fintech-network:
+    driver: bridge

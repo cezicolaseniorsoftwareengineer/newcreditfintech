@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">Extrato</h1>
+    <p class="text-gray-500">Histórico completo de suas transações.</p>
+</div>
+
+<!-- Summary Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <p class="text-sm text-gray-500 mb-1">Saldo Atual</p>
+        <h3 class="text-2xl font-bold text-gray-900" id="saldo-atual">R$ ...</h3>
+    </div>
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <p class="text-sm text-gray-500 mb-1">Total Entradas</p>
+        <h3 class="text-2xl font-bold text-green-600" id="total-entradas">R$ ...</h3>
+    </div>
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <p class="text-sm text-gray-500 mb-1">Total Saídas</p>
+        <h3 class="text-2xl font-bold text-red-600" id="total-saidas">R$ ...</h3>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="flex gap-2 mb-4 overflow-x-auto pb-2">
+    <button onclick="filterExtrato('todos')"
+        class="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium whitespace-nowrap">Todos</button>
+    <button onclick="filterExtrato('CRIADO')"
+        class="px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-lg text-sm font-medium whitespace-nowrap hover:bg-gray-50">Pendentes</button>
+    <button onclick="filterExtrato('CONFIRMADO')"
+        class="px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-lg text-sm font-medium whitespace-nowrap hover:bg-gray-50">Confirmados</button>
+    <button onclick="filterExtrato('AGENDADO')"
+        class="px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-lg text-sm font-medium whitespace-nowrap hover:bg-gray-50">Agendados</button>
+</div>
+
+<!-- Transactions List (Desktop) -->
+<div class="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-50 border-b border-gray-100">
+                    <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Data</th>
+                    <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Descrição</th>
+                    <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Valor</th>
+                </tr>
+            </thead>
+            <tbody id="extrato-body" class="divide-y divide-gray-100">
+                <!-- Rows will be populated by JS -->
+                <tr>
+                    <td colspan="4" class="p-8 text-center text-gray-500">Carregando transações...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Transactions List (Mobile) -->
+<div id="extrato-mobile" class="md:hidden space-y-3">
+    <!-- Cards will be populated by JS -->
+    <div class="text-center text-gray-500 py-8">Carregando transações...</div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let allTransactions = [];
+
+    async function loadExtrato() {
+        try {
+            const response = await fetch('/pix/extrato?limite=100');
+            const data = await response.json();
+
+            // Update Summary
+            document.getElementById('saldo-atual').innerText = formatCurrency(data.saldo);
+
+            // Calculate totals locally for simplicity (or backend could provide)
+            let entradas = 0;
+            let saidas = 0;
+
+            allTransactions = data.transacoes;
+
+            allTransactions.forEach(t => {
+                if (t.tipo === 'RECEBIDO' && t.status === 'CONFIRMADO') entradas += t.valor;
+                if (t.tipo === 'ENVIADO' && t.status === 'CONFIRMADO') saidas += t.valor;
+            });
+
+            document.getElementById('total-entradas').innerText = formatCurrency(entradas);
+            document.getElementById('total-saidas').innerText = formatCurrency(saidas);
+
+            renderTable(allTransactions);
+
+        } catch (error) {
+            console.error('Erro ao carregar extrato:', error);
+            document.getElementById('extrato-body').innerHTML = `
+                <tr><td colspan="4" class="p-8 text-center text-red-500">Erro ao carregar dados.</td></tr>
+            `;
+        }
+    }
+
+    function renderTable(transactions) {
+        const tbody = document.getElementById('extrato-body');
+        const mobileContainer = document.getElementById('extrato-mobile');
+
+        tbody.innerHTML = '';
+        mobileContainer.innerHTML = '';
+
+        if (transactions.length === 0) {
+            const emptyMsg = `<div class="p-8 text-center text-gray-500">Nenhuma transação encontrada.</div>`;
+            tbody.innerHTML = `<tr><td colspan="4">${emptyMsg}</td></tr>`;
+            mobileContainer.innerHTML = emptyMsg;
+            return;
+        }
+
+        transactions.forEach(t => {
+            const dateObj = new Date(t.criado_em || t.data_criacao); // Fallback for different field names if needed
+            const date = dateObj.toLocaleDateString('pt-BR', {
+                day: '2-digit', month: '2-digit', year: 'numeric'
+            });
+            const time = dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+            const isNegative = t.tipo === 'ENVIADO';
+            const colorClass = isNegative ? 'text-red-600' : 'text-green-600';
+            const sign = isNegative ? '-' : '+';
+            const icon = isNegative ? 'arrow-up-right' : 'arrow-down-left';
+            const iconBg = isNegative ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600';
+
+            let statusBadge = '';
+            let actions = '';
+
+            if (t.status === 'CONFIRMADO') statusBadge = '<span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">Confirmado</span>';
+            else if (t.status === 'AGENDADO') {
+                statusBadge = '<span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">Agendado</span>';
+                actions = `
+                    <button onclick="cancelarAgendamento('${t.id}')" class="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors" title="Cancelar Agendamento">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                `;
+            }
+            else if (t.status === 'FALHA') statusBadge = '<span class="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">Falha</span>';
+            else if (t.status === 'CANCELADO') statusBadge = '<span class="px-2 py-1 bg-gray-100 text-gray-500 rounded-full text-xs font-medium line-through">Cancelado</span>';
+            else statusBadge = `<span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">${t.status}</span>`;
+
+            // Desktop Row
+            const row = `
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="p-4 text-sm text-gray-600">
+                        ${date} <span class="text-xs text-gray-400 ml-1">${time}</span>
+                    </td>
+                    <td class="p-4 text-sm text-gray-900 font-medium">
+                        ${t.descricao || (t.tipo === 'ENVIADO' ? 'Transferência Enviada' : 'Transferência Recebida')}
+                        ${t.data_agendamento ? `<br><span class="text-xs text-blue-500">Agendado para: ${new Date(t.data_agendamento).toLocaleDateString('pt-BR')}</span>` : ''}
+                    </td>
+                    <td class="p-4 flex items-center gap-2">
+                        ${statusBadge}
+                        ${actions}
+                    </td>
+                    <td class="p-4 text-sm font-bold text-right ${colorClass}">
+                        ${sign} ${formatCurrency(t.valor)}
+                    </td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+
+            // Mobile Card
+            const card = `
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 rounded-full ${iconBg}">
+                            <i data-lucide="${icon}" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-gray-900">
+                                ${t.descricao || (t.tipo === 'ENVIADO' ? 'Transferência' : 'Depósito')}
+                            </p>
+                            <p class="text-xs text-gray-500">${date} às ${time}</p>
+                            ${t.data_agendamento ? `<p class="text-xs text-blue-500 mt-1">Agendado: ${new Date(t.data_agendamento).toLocaleDateString('pt-BR')}</p>` : ''}
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm font-bold ${colorClass}">${sign} ${formatCurrency(t.valor)}</p>
+                        <div class="mt-1 flex justify-end items-center gap-2">
+                            ${statusBadge}
+                            ${actions}
+                        </div>
+                    </div>
+                </div>
+            `;
+            mobileContainer.innerHTML += card;
+        });
+
+        // Re-initialize icons for new elements
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+    }
+
+    async function cancelarAgendamento(id) {
+        if (!confirm('Tem certeza que deseja cancelar este agendamento?')) return;
+
+        try {
+            const response = await fetch(`/pix/transacoes/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                alert('Agendamento cancelado com sucesso!');
+                loadExtrato(); // Reload list
+            } else {
+                const err = await response.json();
+                alert('Erro ao cancelar: ' + (err.detail || 'Erro desconhecido'));
+            }
+        } catch (error) {
+            alert('Erro de conexão ao tentar cancelar.');
+        }
+    }
+
+    function formatCurrency(value) {
+        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+    }
+
+    function filterExtrato(status) {
+        if (status === 'todos') {
+            renderTable(allTransactions);
+        } else {
+            const filtered = allTransactions.filter(t => t.status === status);
+            renderTable(filtered);
+        }
+    }
+
+    // Load on start
+    loadExtrato();
+</script>
+{% endblock %}
