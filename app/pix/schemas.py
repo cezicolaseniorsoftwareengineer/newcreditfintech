@@ -52,7 +52,7 @@ class PixCreateRequest(BaseModel):
 
         tipo = info.data['tipo_chave']
 
-        elif tipo == TipoChavePix.CPF:
+        if tipo == TipoChavePix.CPF:
             # Remove formatting
             cpf = re.sub(r'\D', '', v)
             if len(cpf) != 11:
