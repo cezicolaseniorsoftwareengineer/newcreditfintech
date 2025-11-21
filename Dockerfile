@@ -20,14 +20,10 @@ RUN mkdir -p /app/data
 
 # Environment variables
 ENV PYTHONUNBUFFERED=1
-ENV DATABASE_URL=sqlite:///./data/fintech.db
 
 # Expose application port
 EXPOSE 8000
 
-# Container health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
-
 # Application entrypoint
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Use shell form to allow variable expansion of $PORT provided by Render
+CMD sh -c "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"
