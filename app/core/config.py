@@ -19,9 +19,6 @@ class Settings(BaseSettings):
     # Increased to 7 days (10080 minutes) to keep users logged in ("Remember Me")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080
 
-    GOOGLE_CLIENT_ID: str = "1091893544918-tv108hl89ii4lhea7asd1qe55rm6fcsv.apps.googleusercontent.com"
-    GOOGLE_CLIENT_SECRET: str = "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"
-
     LOG_LEVEL: str = "INFO"
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)

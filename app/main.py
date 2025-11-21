@@ -7,7 +7,6 @@ from typing import Callable, Awaitable, Dict, Any
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.sessions import SessionMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from contextlib import asynccontextmanager
 import time
@@ -53,11 +52,7 @@ app = FastAPI(
 )
 
 # Trust X-Forwarded-Proto headers from Render's Load Balancer
-# This fixes the "http vs https" redirect mismatch for Google OAuth
 app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
-
-# Session Middleware (Required for OAuth2)
-app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
 
 # CORS Configuration
 app.add_middleware(
