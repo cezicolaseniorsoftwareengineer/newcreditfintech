@@ -52,11 +52,17 @@ class PixCreateRequest(BaseModel):
 
         tipo = info.data['tipo_chave']
 
-        if tipo == TipoChavePix.CPF:
+        elif tipo == TipoChavePix.CPF:
             # Remove formatting
             cpf = re.sub(r'\D', '', v)
             if len(cpf) != 11:
                 raise ValueError('CPF must have 11 digits')
+
+        elif tipo == TipoChavePix.CNPJ:
+            # Remove formatting
+            cnpj = re.sub(r'\D', '', v)
+            if len(cnpj) != 14:
+                raise ValueError('CNPJ must have 14 digits')
 
         elif tipo == TipoChavePix.EMAIL:
             if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', v):
