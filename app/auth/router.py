@@ -10,7 +10,6 @@ from app.core.config import settings
 from authlib.integrations.starlette_client import OAuth  # type: ignore
 from app.core.logger import logger
 from uuid import uuid4
-from app.pix.models import TransacaoPix, StatusPix, TipoTransacao
 
 router = APIRouter()
 
@@ -25,30 +24,6 @@ oauth.register(  # type: ignore
         'scope': 'openid email profile'
     }
 )
-
-
-def _give_welcome_bonus(db: Session, user_id: str):
-    """Grants a welcome bonus to new users so they can test the PIX Send feature."""
-    try:
-        bonus_amount = 1000.00
-        bonus_pix = TransacaoPix(
-            id=str(uuid4()),
-            valor=bonus_amount,
-            chave_pix="SISTEMA_BONUS",
-            tipo_chave="ALEATORIA",
-            tipo=TipoTransacao.RECEBIDO,
-            status=StatusPix.CONFIRMADO,
-            user_id=user_id,
-            idempotency_key=f"bonus_{user_id}",
-            descricao="Bônus de Boas-vindas NewCredit",
-            correlation_id=str(uuid4())
-        )
-        db.add(bonus_pix)
-        db.commit()
-        logger.info(f"Welcome bonus granted to user {user_id}")
-    except Exception as e:
-        logger.error(f"Failed to grant welcome bonus: {str(e)}")
-        # Don't fail registration if bonus fails
 
 
 @router.get("/google/login")
@@ -101,9 +76,6 @@ async def google_callback(request: Request, response: Response, db: Session = De
             db.refresh(new_user)
             user = new_user
             logger.info(f"New user auto-registered via Google: {email}")
-
-            # Grant Welcome Bonus
-            _give_welcome_bonus(db, user.id)
         else:
             logger.info(f"User logged in via Google: {email}")
 
@@ -149,9 +121,6 @@ def register(response: Response, user: UserCreate, db: Session = Depends(get_db)
     db.commit()
     db.refresh(new_user)
 
-    # Grant Welcome Bonus
-    _give_welcome_bonus(db, new_user.id)
-
     # Auto-login after registration
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
@@ -171,8 +140,6 @@ def register(response: Response, user: UserCreate, db: Session = Depends(get_db)
     )
 
     return {"access_token": access_token, "token_type": "bearer", "nome": new_user.nome}
-
-
 @router.post("/login")
 def login(response: Response, user_in: UserLogin, db: Session = Depends(get_db)):  # type: ignore
     user = db.query(User).filter(User.cpf_cnpj == user_in.cpf_cnpj).first()  # type: ignore

@@ -1,4 +1,4 @@
-from sqlalchemy import String, DateTime
+from sqlalchemy import String, DateTime, Float
 from sqlalchemy.orm import Mapped, mapped_column
 from datetime import datetime, timezone
 from uuid import uuid4
@@ -13,4 +13,5 @@ class User(Base):
     cpf_cnpj: Mapped[str] = mapped_column(String(20), unique=True, nullable=False, index=True)
     email: Mapped[str] = mapped_column(String(100), unique=True, nullable=False, index=True)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
+    limite_credito: Mapped[float] = mapped_column(Float, default=10000.00, nullable=False)
     criado_em: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))

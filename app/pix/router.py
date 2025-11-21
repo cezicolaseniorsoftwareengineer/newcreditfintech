@@ -22,7 +22,7 @@ from app.pix.schemas import (
 from app.pix.service import criar_pix, confirmar_pix, buscar_pix, listar_extrato, cancelar_pix
 from app.core.database import get_db
 from app.core.logger import get_logger_with_correlation
-from app.auth.dependencies import get_current_user
+from app.auth.dependencies import get_current_user, require_active_account
 from app.auth.models import User
 
 router = APIRouter(tags=["PIX"])
@@ -33,13 +33,14 @@ def criar_transacao_pix(
     dados: PixCreateRequest,
     x_idempotency_key: str = Header(..., alias="X-Idempotency-Key"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_active_account),
     x_correlation_id: str = Header(default=None)
 ) -> PixResponse:
     """
     **Challenge 2: PIX Transaction API**
 
     Creates a new transaction with idempotency support.
+    **Requires active account (at least one deposit made).**
 
     - **valor**: Transaction value (R$)
     - **tipo_chave**: Key Type (CPF, EMAIL, TELEFONE, ALEATORIA)

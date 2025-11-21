@@ -14,6 +14,8 @@ from app.parcelamento.service import calcular_parcelas, salvar_simulacao
 from app.parcelamento.models import SimulacaoParcelamento
 from app.core.database import get_db
 from app.core.logger import get_logger_with_correlation
+from app.auth.dependencies import require_active_account
+from app.auth.models import User
 
 router = APIRouter(tags=["Parcelamento"])
 
@@ -22,12 +24,14 @@ router = APIRouter(tags=["Parcelamento"])
 def simular_parcelamento(
     dados: SimulacaoRequest,
     db: Session = Depends(get_db),
+    current_user: User = Depends(require_active_account),
     x_correlation_id: str = Header(default=None)
 ) -> SimulacaoResponse:
     """
     **Challenge 1: Installment Simulation Engine**
 
     Calculates compound interest (Price Table) and CET.
+    **Requires active account (at least one deposit made).**
 
     - **valor**: Principal amount (R$)
     - **parcelas**: Number of installments (1-360)
