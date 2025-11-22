@@ -12,6 +12,7 @@ import traceback
 
 router = APIRouter()
 
+
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 def register(response: Response, user: UserCreate, db: Session = Depends(get_db)):
     """
@@ -88,6 +89,7 @@ def register(response: Response, user: UserCreate, db: Session = Depends(get_db)
             detail="Internal server error. Please try again later."
         )
 
+
 @router.post("/login")
 def login(response: Response, user_in: UserLogin, db: Session = Depends(get_db)):
     """
@@ -138,6 +140,7 @@ def login(response: Response, user_in: UserLogin, db: Session = Depends(get_db))
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error performing login."
         )
+
 
 @router.post("/logout")
 def logout(response: Response):

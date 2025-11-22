@@ -103,6 +103,7 @@ async def add_security_headers(request: Request, call_next: Callable[[Request], 
 
     return response
 
+
 @app.middleware("http")
 async def add_correlation_id(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
     """
@@ -232,4 +233,3 @@ async def global_exception_handler(request: Request, exc: Exception):
             "correlation_id": correlation_id
         }
     )
-

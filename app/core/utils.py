@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
 import re
 
+
 def mask_cpf_cnpj(doc: str) -> str:
     """
     Masks CPF or CNPJ.
@@ -9,16 +10,17 @@ def mask_cpf_cnpj(doc: str) -> str:
     """
     clean_doc = re.sub(r'\D', '', doc)
 
-    if len(clean_doc) == 11: # CPF
+    if len(clean_doc) == 11:  # CPF
         return f"***.{clean_doc[3:6]}.{clean_doc[6:9]}-**"
-    elif len(clean_doc) == 14: # CNPJ
+    elif len(clean_doc) == 14:  # CNPJ
         return f"**.***.{clean_doc[5:8]}/{clean_doc[8:12]}-**"
     else:
         # Fallback for other keys (email, phone) or invalid docs
-        if "@" in doc: # Email
+        if "@" in doc:  # Email
             user, domain = doc.split("@")
             return f"{user[:2]}***@{domain}"
         return f"{doc[:3]}***{doc[-2:]}"
+
 
 def format_brasilia_time(dt: datetime) -> str:
     """

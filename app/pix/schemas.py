@@ -11,6 +11,7 @@ import re
 
 from app.pix.models import PixStatus
 
+
 class PixKeyType(str, Enum):
     """Valid PIX key types."""
     CPF = "CPF"
@@ -18,8 +19,6 @@ class PixKeyType(str, Enum):
     EMAIL = "EMAIL"
     PHONE = "TELEFONE"
     RANDOM = "ALEATORIA"
-
-
 
 
 class PixCreateRequest(BaseModel):
@@ -124,4 +123,3 @@ class PixChargeResponse(BaseModel):
 class PixChargeConfirmRequest(BaseModel):
     """Request payload for confirming a PIX charge payment."""
     charge_id: str = Field(..., description="Unique Charge ID to confirm")
-

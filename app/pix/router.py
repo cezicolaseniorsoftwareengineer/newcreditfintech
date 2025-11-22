@@ -350,7 +350,7 @@ def build_pix_response(pix: Any, db: Session) -> PixResponse:
             # External or not found - Try to resolve from Key
             # If key is CPF/CNPJ, we might mask it. If it's email, show it.
             receiver_name = "External Receiver"
-            receiver_doc = mask_cpf_cnpj(pix.pix_key) # Best effort
+            receiver_doc = mask_cpf_cnpj(pix.pix_key)  # Best effort
 
     elif pix.type == TransactionType.RECEIVED:
         # The owner is the receiver

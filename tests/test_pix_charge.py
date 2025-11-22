@@ -13,6 +13,7 @@ client = TestClient(app)
 # Mock User
 mock_user = User(id="user-123", name="Test User", cpf_cnpj="12345678901", credit_limit=1000.0)
 
+
 def test_generate_pix_charge():
     # Mock DB
     mock_db = MagicMock()
@@ -40,6 +41,7 @@ def test_generate_pix_charge():
 
     # Clean up
     app.dependency_overrides = {}
+
 
 def test_process_pix_receipt_success():
     # Mock DB
@@ -85,6 +87,7 @@ def test_process_pix_receipt_success():
     # Clean up
     app.dependency_overrides = {}
 
+
 def test_process_pix_receipt_already_paid():
     # Mock DB
     mock_db = MagicMock()
@@ -93,7 +96,7 @@ def test_process_pix_receipt_already_paid():
     mock_tx = PixTransaction(
         id="charge-123",
         value=50.0,
-        status=PixStatus.CONFIRMED, # Already paid
+        status=PixStatus.CONFIRMED,  # Already paid
         user_id="user-123",
         type=TransactionType.RECEIVED,
         key_type="ALEATORIA",
@@ -119,6 +122,7 @@ def test_process_pix_receipt_already_paid():
 
     # Clean up
     app.dependency_overrides = {}
+
 
 def test_process_pix_receipt_not_found():
     # Mock DB

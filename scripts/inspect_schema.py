@@ -1,6 +1,7 @@
-print("Script starting...")
 import sys
 import os
+
+print("Script starting...")
 
 # Add project root to sys.path
 sys.path.append(os.getcwd())
@@ -13,8 +14,9 @@ except Exception as e:
     print(f"Import failed: {e}")
     sys.exit(1)
 
+
 def inspect_users_table():
-    print(f"Inspecting database...")
+    print("Inspecting database...")
     try:
         with engine.connect() as _:
             print("Connection successful.")
@@ -41,6 +43,7 @@ def inspect_users_table():
                 print(f"- {column['name']} ({column['type']})")
     except Exception as e:
         print(f"Error during inspection: {e}")
+
 
 if __name__ == "__main__":
     inspect_users_table()
