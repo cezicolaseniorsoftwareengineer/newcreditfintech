@@ -270,16 +270,13 @@ def process_pix_receipt(
     logger.info(f"Processing PIX receipt for charge: {data.charge_id}")
 
     # Find the charge transaction
-    # Note: In a real scenario, we would verify if the payer is paying the right person.
-    # Here, we assume the current_user is the one triggering the simulation (the payer/payee context is simplified).
-    # Actually, usually the PAYER triggers this. But in this simulation, the RECEIVER (User) might be opening the link?
-    # No, the link is opened by the Payer.
-    # Let's assume the transaction exists in the DB.
-
     pix = db.query(PixTransaction).filter(PixTransaction.id == data.charge_id).first()
 
     if not pix:
+        logger.error(f"Charge not found: {data.charge_id}")
         raise HTTPException(status_code=404, detail="Cobrança não encontrada.")
+
+    logger.info(f"Charge found: {pix.id}, Status: {pix.status}, Value: {pix.value}")
 
     # CRITICAL: One-Time Use Check
     if pix.status == PixStatus.CONFIRMED:
@@ -287,6 +284,7 @@ def process_pix_receipt(
         raise HTTPException(status_code=409, detail="Esta cobrança já foi paga e não pode ser utilizada novamente.")
 
     if pix.status != PixStatus.CREATED:
+        logger.error(f"Invalid charge status: {pix.status} for charge {data.charge_id}")
         raise HTTPException(status_code=400, detail=f"Status da cobrança inválido: {pix.status}")
 
     try:
@@ -302,10 +300,13 @@ def process_pix_receipt(
             receiver_user.credit_limit += limit_increase
             db.add(receiver_user)
             logger.info(f"Credit limit increased by R$ {limit_increase:.2f} for user {receiver_user.id}")
+        else:
+            logger.warning(f"Receiver user not found for charge {pix.id} (User ID: {pix.user_id})")
 
         db.commit()
         db.refresh(pix)
 
+        logger.info(f"Charge {pix.id} successfully confirmed.")
         return build_pix_response(pix, db)
 
     except Exception as e:

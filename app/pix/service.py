@@ -122,12 +122,18 @@ def create_pix(
 
         # Search for recipient by Key
         if data.key_type in [PixKeyType.CPF, PixKeyType.CNPJ]:
+            # Normalize key: remove non-digits
             clean_key = re.sub(r'\D', '', data.pix_key)
+            logger.info(f"Searching for recipient with CPF/CNPJ: {clean_key}")
             recipient_user = db.query(User).filter(User.cpf_cnpj == clean_key).first()
         elif data.key_type == PixKeyType.EMAIL:
-            recipient_user = db.query(User).filter(User.email == data.pix_key).first()
+            email_key = data.pix_key.strip().lower()
+            logger.info(f"Searching for recipient with Email: {email_key}")
+            recipient_user = db.query(User).filter(func.lower(User.email) == email_key).first()
 
         if recipient_user:
+            logger.info(f"Recipient found: {recipient_user.name} (ID: {recipient_user.id})")
+
             # Create incoming transaction for recipient
             received_pix = PixTransaction(
                 id=str(uuid4()),
@@ -137,7 +143,7 @@ def create_pix(
                 type=TransactionType.RECEIVED,
                 status=PixStatus.CONFIRMED,
                 idempotency_key=f"internal-{idempotency_key}",
-                description=data.description or "Transfer Received",
+                description=data.description or "Transferência Recebida",
                 correlation_id=correlation_id,
                 user_id=recipient_user.id
             )
@@ -150,6 +156,8 @@ def create_pix(
 
             logger.info(f"Internal transfer executed: {data.value} to {recipient_user.name} (ID: {recipient_user.id})")
             logger.info(f"Credit limit for {recipient_user.name} increased by R$ {limit_increase:.2f}")
+        else:
+            logger.warning(f"Recipient NOT found for key: {data.pix_key} (Type: {data.key_type})")
 
     return pix
 
