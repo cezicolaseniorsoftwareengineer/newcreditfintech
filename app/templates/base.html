@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>NewCredit Fintech</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -11,6 +11,8 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            touch-action: pan-x pan-y;
+            /* Disables double-tap zoom */
         }
 
         .nu-purple {
@@ -91,6 +93,44 @@
 
     <script>
         lucide.createIcons();
+
+        // --- ZOOM PREVENTION LOGIC ---
+        // 1. Prevent Ctrl + Scroll (Desktop Zoom)
+        document.addEventListener('wheel', function (e) {
+            if (e.ctrlKey) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        // 2. Prevent Ctrl + +/- Keys (Desktop Zoom)
+        document.addEventListener('keydown', function (e) {
+            if (e.ctrlKey && (
+                e.key === '+' ||
+                e.key === '-' ||
+                e.key === '=' ||
+                e.key === '0'
+            )) {
+                e.preventDefault();
+            }
+        });
+
+        // 3. Prevent Pinch Zoom (Mobile/Tablet)
+        document.addEventListener('touchmove', function (e) {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        // 4. Prevent Double Tap Zoom (Mobile/Tablet)
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (e) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+        // -----------------------------
 
         // Balance Toggle Logic
         const toggleBtn = document.getElementById('toggle-balance');
